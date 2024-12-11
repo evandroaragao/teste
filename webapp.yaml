@@ -1,14 +1,57 @@
-apiVersion: v1
-kind: Pod
+---
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   creationTimestamp: null
   labels:
-    run: webapp
-  name: webapp
+    app: teste-webapp
+  name: teste-webapp
+  namespace: teste
 spec:
-  containers:
-  - image: kodekloud/webapp-color
-    name: webapp
-    resources: {}
-  dnsPolicy: ClusterFirst
-  restartPolicy: Always
+  replicas: 1
+  selector:
+    matchLabels:
+      app: teste-webapp
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: teste-webapp
+    spec:
+      containers:
+      - image: kodekloud/webapp-color
+        name: webapp-color
+        resources: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: teste-webapp-svc
+  namespace: teste
+spec:
+  selector:
+    app: teste-webapp
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 9376
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: teste-webapp
+  namespace: teste
+  annotations:
+    openshift.io/host.generated: 'true'
+spec:
+  host: teste-webapp-teste.com.br
+  to:
+    kind: Service
+    name: teste-webapp-svc
+    weight: 100
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge
+  wildcardPolicy: None
